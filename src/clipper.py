@@ -908,7 +908,7 @@ def hunt(job_path):
         if LIVE["on"]:
             total, LIVE["on"] = stream_info(url)
             LIVE["total"] = total if LIVE["on"] else 0
-    write_best(out_dir, results)
+    write_best(out_dir, results, int(job.get("upload_count", 10)))
     log(f"\nHUNT DONE: {made} clips in {out_dir.resolve()}")
 
 

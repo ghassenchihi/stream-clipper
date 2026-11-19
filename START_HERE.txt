@@ -1,0 +1,26 @@
+STREAM CLIPPER - 3 LAST STEPS
+=============================
+
+Setup is done: Python, the packages and the clipper agent are installed,
+and the agent runs hidden in the background (it also starts with Windows).
+
+1) ADD THE SKILL TO CLAUDE
+   - Open the Claude desktop app -> Settings -> Skills (or Capabilities -> Skills)
+   - Upload "stream-clipper-skill.zip" from this folder.
+
+2) SIGN IN TO YOUTUBE
+   - In the Claude app, open the built-in browser and go to https://studio.youtube.com
+   - Sign in to the channel you want to post Shorts on.
+     (Claude never types your password - you sign in yourself.)
+
+3) RUN IT
+   - In a new Claude chat, type:  /stream-clipper
+   - First time: Claude asks "How many clips do you want per video?" -> pick a number.
+     It's saved. Say "change my clip count" anytime.
+   - When Claude asks for access to Videos\clipper, click Allow.
+   - Choose "Clipping", paste a Twitch or YouTube stream URL, and let it work.
+   - When a clip is ready, Claude opens the YouTube upload box: drag the clip in.
+
+Tips
+ - NVIDIA GPU? Double-click install_gpu.bat for faster transcription (about 1 GB).
+ - Always credit the streamer. Reposting other people's streams can get copyright claims.

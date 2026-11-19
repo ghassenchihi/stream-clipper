@@ -1,11 +1,11 @@
 ---
 name: "stream-clipper"
-description: "Give Claude a stream URL (YouTube or Twitch, live or VOD) and get 10 excellent captioned 9:16 Shorts, uploaded, with no clicking: watch it from the start in small low-quality parts, Claude picks the moments from the transcript, cut at 720p, follow it to the end. Use when the user runs /stream-clipper or asks to clip a stream."
+description: "Give Claude a stream URL (YouTube or Twitch, live or VOD) and get N excellent captioned (N chosen on first run, default 10) 9:16 Shorts, uploaded, with no clicking: watch it from the start in small low-quality parts, Claude picks the moments from the transcript, cut at 720p, follow it to the end. Use when the user runs /stream-clipper or asks to clip a stream."
 ---
 
 # Stream clipper
 
-**You give a URL. Claude delivers 10 excellent clips, uploaded. You do no clicking.**
+**You give a URL. Claude delivers N excellent clips (you choose N the first time), uploaded. You do no clicking.**
 
 Watch the stream from 0:00 at the lowest quality, one 20-min part at a time (only that part's fragments are downloaded, then deleted) -> **Claude reads each part's transcript and picks the moments** (the score is only a shortlist and an automatic fallback) -> only those moments are downloaded at 720p -> edited into Shorts (9:16, facecam layout, word captions, hook, loudnorm) -> next part -> until the end (follows a live) -> quality check -> upload the 10 best to your channel, Public, with no file picker.
 
@@ -23,15 +23,23 @@ Ideas from Clips Kitty (github.com/ColinGPT9/clips-studio) and its MIT GTA plugi
 ## The user's rules (always)
 - **No clicking for him**, except the one-time `SETUP_once.vbs` (Step 1). Never ask him to pick, close or drag anything while the bridge works.
 - **Never download the whole stream.** Watching = that part's fragments at the lowest quality (YouTube 144p, Twitch 160p, never "auto"), deleted after analysis. 720p only for the clip moments.
-- **Watch the FULL stream from 0:00, in order, to the end.** Save every good clip (up to 3 per part); upload the **10 best** (`best.json`, Claude's picks rank first), in stream order; the rest stay saved. Live: keep following until it ends.
+- **Watch the FULL stream from 0:00, in order, to the end.** Save every good clip (up to 3 per part); upload the **N best** (N = `clips_per_video` in `settings.json`; `best.json`, Claude's picks rank first), in stream order; the rest stay saved. Live: keep following until it ends.
 - **Tell him every step** (SendUserMessage, one short line + emoji, read from `STATUS` lines): 📥 part X-Y -> 👀 watching -> 🧠 picking from the transcript -> 🎯 clip N at H:MM:SS (what happens) / nothing good -> 📥 720p -> ✂️ editing -> ✅ ready (+ check) -> 🚀 uploaded (link).
 - Edit: 9:16; facecam top + gameplay below when there is a cam (else center crop); 3-word captions, spoken word yellow; hook on the first ~3 s; `loudnorm`; whole sentences only.
 - **Blur layout per clip, Claude decides (he asked, 2026-11-19, model clip `kaicenat-gta6_02`)**: `"layout": "fit"` = the WHOLE 16:9 frame (game + his cam overlay, nothing cropped) in the middle of the 9:16 canvas on a blurred, darkened copy; hook above, captions below. NOT for every clip: hunt.json keeps the split facecam layout as default, and Claude adds `"layout": "fit"` only to the picks where it's the better format - the moment needs the whole screen to make sense (cutscene/dialogue he reacts to, wide scene, chase seen from far, a map/phone screen he reacts to), the scene is dark, or the cam box is off/moving. Pure face reactions stay split (his face big). Foreground: `hqdn3d,scale=1080:-2:flags=lanczos,cas=0.4`.
 - **Natural, sharp facecam (he asked, 2026-11-19)**: clips download at **1080p** (`"height": 1080`) so the small cam box has ~2x more pixels. The cam panel keeps the cam's own shape (height = 1080 x cam aspect, 540-780 px; the old fixed 1080x608 cut off Speed's head and chin), is trimmed 2% inside the box (6% at the bottom: overlay borders / light lines), denoised (`hqdn3d`), upscaled with `lanczos`, sharpened (`cas=0.6`), slightly more colour (`eq=saturation=1.06:contrast=1.03`), with a thin dark divider above the gameplay; gameplay gets lanczos + `cas=0.3`; encode `libx264 -preset medium -crf 18 -pix_fmt yuv420p`. In the quality check, look at the cam panel: whole head visible, no border line, not blurry; else fix the box and redo.
 - **Excellent only**: check every clip (frame + transcript) and redo or drop weak/wrong ones.
-- 10 clips per run unless he says otherwise. Channel: your channel (YouTube Studio, signed in inside the built-in browser). Visibility **Public**.
+- N clips per run (`settings.json` -> `clips_per_video`), unless the user asks for another number this run. Channel: your channel (YouTube Studio, signed in inside the built-in browser). Visibility **Public**.
 - Work folder: `%USERPROFILE%\Videos\clipper` (device_bash `$HOME/mnt/clipper`). Any .mp4 in `clips\` not under `_uploaded\` = not uploaded yet.
 - Only one Claude chat drives the clipper at a time. If files change under you (mtime of `clipper.py`, `agent.bat`, new `GO_*`) that you didn't write, another chat is working: tell him and don't overwrite its files.
+
+## First run only - how many clips per video?
+Before Step 0, check `cat $HOME/mnt/clipper/settings.json` (connect `~/Videos/clipper` first if needed).
+- **Missing** -> this is the user's first run. Welcome them in one line, then AskUserQuestion: **"How many clips do you want per video?"** with options **5**, **10 (Recommended)**, **15**, **20** (they can type another number). Save it:
+  `printf '{"clips_per_video": %d}\n' <N> > $HOME/mnt/clipper/settings.json`
+  and tell them: "Saved - every video gives you N clips. Say 'change my clip count' anytime."
+- **Present** -> read `clips_per_video` as N and don't ask again. If the user asks to change it, rewrite the file.
+- N is how many clips get uploaded per video (`"upload_count": N` in hunt.json, the N best from `best.json`). Keep `max_clips` at least 3 x N so there are enough to pick from.
 
 ## Step 0 - Ask first: uploading or clipping? (he asked, 2026-11-19)
 **Every run starts with this question, before anything else - even when a URL came with the command.** Use AskUserQuestion: **"Are we uploading or clipping today?"** with options **Uploading** (upload saved clips to your channel) / **Clipping** (clip a new live or video).
@@ -63,7 +71,7 @@ Write `hunt.json` with a device_bash heredoc (`cat > $HOME/mnt/clipper/hunt.json
  "from": "0:00:00", "chunk_minutes": 20, "per_chunk": 3, "max_clips": 60, "min_score": 2.0,
  "watch_height": 160, "height": 1080, "model": "small", "scan_model": "base",
  "layout": "auto", "facecam": "auto", "hook": true, "follow_live": true,
- "judge": "claude", "judge_wait": 240}
+ "judge": "claude", "judge_wait": 240, "upload_count": <N>}
 ```
 - New `streamer` per stream. Continue an interrupted hunt with `"from": "<where it stopped>"` + `"start_n": <next number>`.
 - `live_log.txt` locked by a frozen run -> same JSON as `job.json` with `"mode": "hunt"` + `touch GO_job.txt` (log `job_log.txt`).
@@ -102,7 +110,7 @@ After each `STATUS READY clip n`: device_bash preview (`ffmpeg -ss 10 -i clip -f
 - At `HUNT DONE` (`STATUS BEST` -> `best.json`): tell him "N clips ready" + one line per best clip, then go straight to Step 5.
 
 ## Step 5 - Upload
-Built-in browser, YouTube Studio (your channel). For each of the 10 best (stream order):
+Built-in browser, YouTube Studio (your channel). For each of the N best (stream order):
 1. Studio -> Create -> "Upload videos": open it with JS (`#create-icon` click, wait 1 s, then the `tp-yt-paper-item` whose text is "Upload videos") and confirm the dialog text has "Drag and drop" (a ref click once left only the menu open).
 2. He drags the file in: SendUserMessage "Upload box is open (Ctrl+Shift+B). Drag `<folder>\<file>.mp4` (k of N)" and poll for `ytcp-video-metadata-editor` with `browser_batch` (4 x `computer wait 10` + one JS check; `await setTimeout` loops in javascript_tool hang here), ~3 min; not in time -> "N clips still waiting - I'll remind you next time". Check the default title (`speed gta6 03`) matches the clip you asked for.
    - **The no-drag bridge does NOT work in the built-in browser** (tested 2026-11-19): Studio blocks the hidden iframe (CSP), `fetch` to 127.0.0.1 ("Failed to fetch"), and every popup - even one opened from a real click. `serve_clips.py` itself works (`http://127.0.0.1:8766/list` opens fine in its own tab). Don't retry those. Untested ideas for a future no-drag upload: Claude in Chrome's `file_upload` (3.8 MB max -> needs a small upload copy), or computer use on the Windows file picker (type the path in File name + Enter).

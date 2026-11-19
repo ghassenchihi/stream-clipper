@@ -68,18 +68,45 @@ I'm a 2nd-year computer engineering student. I knew the goal and the tools exist
 ## 📁 Repository
 
 ```
+ClickMeFirst.bat   ← one-click installer (Windows)
+START_HERE.txt     ← the 3 last steps, opened for you after setup
 skill/SKILL.md     ← the full skill: rules, pipeline, lessons learned, fixes
-src/               ← clipper.py, judge.py, serve_clips.py, Windows agent scripts
+src/               ← clipper.py (download, transcribe, score, render), judge.py (LLM review),
+                     serve_clips.py, Windows agent scripts
 ```
 
-> `src/` holds the pipeline: `clipper.py` (download, transcribe, score, render), `judge.py` (LLM review step), `serve_clips.py`, and the Windows agent scripts.
+## 🚀 Setup (Windows, ~10 minutes)
 
-## ▶️ Use it
+**You need:** Windows 10/11 and the [Claude desktop app](https://claude.ai/download) on a paid plan. Everything else installs itself.
 
-1. Install [Claude](https://claude.ai) with the desktop app and add `skill/SKILL.md` as a skill.
-2. Put the `src/` files in `%USERPROFILE%\Videos\clipper` and double-click `SETUP_once.vbs` once.
-3. Sign in to YouTube Studio in Claude's built-in browser.
-4. Type `/stream-clipper` and paste a stream URL.
+### 1. Download and run the installer
+1. Click the green **Code → Download ZIP** button on this page, then **unzip** it.
+2. Double-click **`ClickMeFirst.bat`**.
+   *If Windows says "Windows protected your PC", click **More info → Run anyway**.*
+
+It does everything for you:
+- installs **Python 3.12** if you don't have it
+- creates **`Videos\clipper`** and copies the code there
+- installs **yt-dlp, faster-whisper, ffmpeg**
+- builds **`stream-clipper-skill.zip`** for the Claude app
+- starts the clipper agent hidden in the background (it also starts with Windows)
+- opens the `clipper` folder and `START_HERE.txt`
+
+### 2. Add the skill to Claude
+In the Claude desktop app: **Settings → Skills** → upload **`stream-clipper-skill.zip`** from `Videos\clipper`.
+
+### 3. Sign in to YouTube
+In the Claude app, open the **built-in browser**, go to **studio.youtube.com** and sign in to the channel you'll post on. Claude never types your password.
+
+### 4. Run it
+Type **`/stream-clipper`** in a new chat.
+- **First time only:** Claude asks **how many clips you want per video** (5, 10, 15, 20…). It's saved. Say *"change my clip count"* anytime.
+- Click **Allow** when Claude asks for access to `Videos\clipper`.
+- Choose **Clipping**, paste a Twitch or YouTube stream URL, and let it work. When each clip is ready, Claude opens the YouTube upload box and you drag the clip in.
+
+**Optional:** with an NVIDIA GPU, double-click `install_gpu.bat` in `Videos\clipper` for faster transcription (~1 GB).
+
+> Tuned for Kai Cenat's GTA streams (automatic facecam detection). For other streamers, Claude measures the webcam position or uses the blurred full-frame layout.
 
 ## ⚖️ Responsible use
 
