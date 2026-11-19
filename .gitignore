@@ -1,0 +1,16 @@
+clips/
+clipper_work/
+review/
+*.mp4
+*.wav
+*.jpg
+*_log.txt
+GO_*.txt
+STOP
+agent_alive.txt
+busy_alive.txt
+hunt.json
+job.json
+best.json
+clips_info.json
+__pycache__/
